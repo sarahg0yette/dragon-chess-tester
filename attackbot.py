@@ -24,6 +24,15 @@ def board_state_hash(state):
 # Import the Numba‑compiled move generators (they work on positions expressed as 1D indices)
 from game import move_generators
 
+def check_move(move):
+    from_idx, to_idx, flag = move
+    moving_piece = game.board[from_idx]  
+    target_piece = game.board[to_idx]
+
+    if game.target_piece != 0 and ((game.moving_piece > 0 and game.target_piece < 0) or (game.moving_piece < 0 and game.target_piece > 0)):
+            return True
+            #this is taking a target piece (from the enemy)
+
 def get_all_moves(state, color):
     """
     Given a state (board, turn_flag) where board is a flat NumPy array and
@@ -54,14 +63,6 @@ def get_all_moves(state, color):
                             moves.append(move)
     return moves
 
-def check_move(move):
-    from_idx, to_idx, flag = move
-    moving_piece = game.board[from_idx]  
-    target_piece = game.board[to_idx]
-
-    if game.target_piece != 0 and ((game.moving_piece > 0 and game.target_piece < 0) or (game.moving_piece < 0 and game.target_piece > 0)):
-            return True
-            #this is taking a target piece (from the enemy)
         
 # --- Custom AI using Heuristic ---
 class CustomAI:
