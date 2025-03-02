@@ -24,7 +24,12 @@ def board_state_hash(state):
 # Import the Numba‑compiled move generators (they work on positions expressed as 1D indices)
 from game import move_generators
 
-def get_all_moves(state, color):
+def index_to_algebraic(idx):
+            layer, row, col = game.index_to_pos(idx)
+            board_num = layer + 1
+            return board_num
+
+def get_sky_moves(state, color):
     """
     Given a state (board, turn_flag) where board is a flat NumPy array and
     color is 1 for Gold or -1 for Scarlet, return all legal moves.
@@ -54,11 +59,32 @@ def get_all_moves(state, color):
                             moves.append(move)
     return moves
 
-def index_to_algebraic(idx):
-            layer, row, col = game.index_to_pos(idx)
-            board_num = layer + 1
-            print ("board num", board_num)
-            return board_num
+def index_to_algebraic_orig(idx):
+    layer, row, col = index_to_pos(idx)
+    board_num = layer + 1
+    file_letter = chr(ord('a') + col)
+    rank = BOARD_ROWS - row
+    return f"{board_num}{file_letter}{rank}"
+
+def get_king_moves(state, current_turn, all_moves):
+    board, _ = state
+    pos = False
+
+    for idx in range(game.TOTAL_SQUARES):
+        piece = board[idx]
+        if piece != 0:
+            # Only consider moves for the player whose turn it is.
+            if (current_turn == "Gold" and piece==-10) or (current_turn == "Scarlet" and piece == 10):
+                pos = index_to_algebraic_orig(idx)
+                #print(pos)
+    
+    if pos!=False:
+        for move in all_moves:
+            if(move[2]==pos):
+                return move
+    return False
+
+
         
 # --- Custom AI using Heuristic ---
 class CustomAI:
@@ -78,9 +104,14 @@ class CustomAI:
         history = self.game.state_history
         # Use 1 if "Gold", -1 if "Scarlet" for my_color.
         my_color_flag = 1 if self.color == "Gold" else -1
-        moves = get_all_moves(state, state[1])
-        if len(moves)==0: 
-            all_moves = self.game.get_all_moves()
+        sky_moves = get_sky_moves(state, state[1])
+        all_moves = self.game.get_all_moves()
+        king_move = get_king_moves(state, turn, all_moves) 
+
+        if king_move!=False:
+             return king_move
+        
+        if len(sky_moves)!=0: 
             return random.choice(all_moves)
         else: 
-            return random.choice(moves)
+            return random.choice(sky_moves)
